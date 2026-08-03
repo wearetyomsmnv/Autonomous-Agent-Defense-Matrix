@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous AI Agent Defense Taxonomy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-app: #000000;
+            --bg-surface: #0a0a0a;
+            --text-main: #a1a1aa;
+            --text-muted: #52525b;
+            --text-heading: #ffffff;
+            --accent-primary: #ef4444; 
+            --accent-hover: #dc2626;
+            --accent-light: rgba(239, 68, 68, 0.15);
+            --border-color: #27272a;
+            --shadow-island: 0 20px 40px -10px rgba(0,0,0,0.8), 0 0 20px rgba(239, 68, 68, 0.2);
+            --p0-color: #ff003c; 
+            --p1-color: #f59e0b; 
+            --p2-color: #3b82f6;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-app);
+            background-image: linear-gradient(var(--border-color) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 32px 32px;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background-color: rgba(10, 10, 10, 0.95);
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--accent-primary);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            backdrop-filter: blur(4px);
+        }
+
+        .header-left { display: flex; flex-direction: column; gap: 4px; }
+        .header-title { display: flex; align-items: center; gap: 12px; }
+        header h1 { margin: 0; font-size: 1.1rem; color: var(--text-heading); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .community-links { font-size: 0.75rem; color: var(--text-muted); }
+        .community-links a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+        .community-links a:hover { color: var(--accent-primary); }
+
+        .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        
+        .search-input {
+            padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 0;
+            background: var(--bg-app); color: var(--text-heading); font-size: 0.85rem; width: 220px;
+            font-family: inherit;
+        }
+        .search-input:focus { outline: 1px solid var(--accent-primary); border-color: var(--accent-primary); }
+
+        select, button {
+            padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 0;
+            background: var(--bg-surface); color: var(--text-heading); font-size: 0.85rem;
+            cursor: pointer; font-weight: 500; font-family: inherit; transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        button:hover { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+        
+        .container { display: flex; flex-direction: column; flex: 1; position: relative; overflow: hidden; }
+        .matrix-area { flex: 1; padding: 24px; padding-bottom: 340px; overflow-x: auto; overflow-y: auto; }
+        .matrix-grid { display: grid; grid-template-columns: repeat(5, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+        
+        @media (max-width: 1024px) {
+            .matrix-grid { grid-template-columns: 1fr; gap: 12px; }
+            .matrix-area { padding-bottom: 400px; }
+        }
+
+        .tactic-col { display: flex; flex-direction: column; gap: 12px; }
+        
+        .tactic-header {
+            background: var(--bg-surface); padding: 12px; font-weight: 700;
+            font-size: 0.8rem; text-align: left; border-left: 4px solid var(--text-heading);
+            text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-heading);
+        }
+
+        .tech-card {
+            background: rgba(24, 24, 27, 0.8); border: 1px solid var(--border-color);
+            padding: 14px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+            position: relative; color: var(--text-heading); outline: none; text-align: left;
+            backdrop-filter: blur(4px);
+        }
+        .tech-card:hover, .tech-card:focus-visible { 
+            transform: translateX(4px); 
+            border-color: var(--accent-primary); 
+            background: var(--bg-surface);
+        }
+        .tech-card.active { 
+            border-left: 4px solid var(--accent-primary); 
+            background: var(--accent-light);
+            border-color: var(--accent-primary);
+        }
+        
+        .priority-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; }
+        .p0 { background: var(--p0-color); box-shadow: 0 0 8px var(--p0-color); } 
+        .p1 { background: var(--p1-color); } 
+        .p2 { background: var(--p2-color); }
+        
+        .tech-meta { display: flex; justify-content: space-between; margin-top: 12px; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+        .category-tag { background: var(--bg-app); padding: 2px 6px; border: 1px solid var(--border-color); color: var(--text-main); }
+
+        .island-panel {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            width: 100%; max-height: 45vh;
+            background: rgba(10, 10, 10, 0.98); border-top: 1px solid var(--accent-primary);
+            box-shadow: var(--shadow-island); z-index: 100; display: flex; flex-direction: column;
+            padding: 24px; overflow-y: auto; backdrop-filter: blur(10px);
+        }
+        
+        .breadcrumb { font-size: 0.75rem; color: var(--accent-primary); margin-bottom: 8px; text-transform: uppercase; font-weight: 700; }
+        .panel-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+        .badges-wrapper { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .panel-title { font-size: 1.5rem; color: var(--text-heading); margin: 0; font-weight: 800; width: 100%; margin-top: 4px; letter-spacing: -0.02em; }
+        
+        .badge { background: var(--accent-light); color: var(--accent-primary); padding: 4px 8px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; border: 1px solid var(--accent-primary); }
+        
+        .close-btn { background: none; border: 1px solid var(--border-color); color: var(--text-heading); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .close-btn:hover { background: var(--accent-primary); border-color: var(--accent-primary); }
+        
+        .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 768px) { .panel-grid { grid-template-columns: 1fr; } }
+        .panel-col { display: flex; flex-direction: column; gap: 16px; }
+        
+        .block { background: transparent; padding: 0; border-left: 2px solid var(--border-color); padding-left: 16px; }
+        .block-title { font-weight: 700; font-size: 0.75rem; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .block-text { font-size: 0.85rem; line-height: 1.6; color: var(--text-heading); }
+        
+        ul { margin: 0; padding-left: 16px; } li { margin-bottom: 6px; }
+        a { color: var(--accent-primary); text-decoration: none; font-weight: 700; border-bottom: 1px dashed var(--accent-primary); } 
+        a:hover { background: var(--accent-primary); color: #000; border-bottom: none; }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-app); }
+        ::-webkit-scrollbar-thumb { background-color: var(--border-color); }
+        ::-webkit-scrollbar-thumb:hover { background-color: var(--accent-primary); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <div class="header-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" style="color: var(--accent-primary);">
+                    <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M2 15h10"></path>
+                    <path d="M9 18l3-3-3-3"></path>
+                </svg>
+                <h1>Autonomous Agent Defense Matrix</h1>
+            </div>
+            <div class="community-links">
+                Curated by <a href="https://t.me/pwnai" target="_blank">t.me/pwnai</a> &amp; <a href="https://t.me/okmlai" target="_blank">t.me/okmlai</a>
+            </div>
+        </div>
+        <div class="toolbar">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search vectors..." onkeyup="filterMatrix()">
+            <select id="categoryFilter" onchange="filterMatrix()">
+                <option value="All">All Categories</option>
+                <option value="Prevent">Prevent</option>
+                <option value="Detect">Detect</option>
+                <option value="Respond">Respond</option>
+                <option value="Active Defense">Active Defense</option>
+                <option value="Govern">Govern</option>
+            </select>
+            <button onclick="exportCSV()">📥 Export CSV</button>
+            <button onclick="exportJSON()">📦 Export JSON</button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="matrix-area" id="matrixArea">
+            <div class="matrix-grid" id="matrix"></div>
+        </div>
+        <div class="island-panel" id="panel" style="display: none;"></div>
+    </div>
+
+    <script>
+        const data = [
+            {
+                tactic: "1. Reconnaissance & Initial Access",
+                techniques: [
+                    {
+                        name: "Goal Hijacking & Core Directive Anchoring",
+                        category: "Prevent",
+                        priority: "P0",
+                        complexity: "High",
+                        mechanism: "Implement cryptographic verification of top-level goals and immutable system prompts. Utilize strict delimiter enforcement and secondary evaluators to prevent user-supplied or retrieved data from superseding primary agent objectives.",
+                        vulnerability: "Attackers can inject malicious context that convinces the agent its original, hardcoded goal has either been successfully met or explicitly overridden by a higher-priority task.",
+                        example_type: "Real-World Incident",
+                        example: "EchoLeak (CVE-2025-32711, June 2025): Aim Security disclosed a zero-click exploit in Microsoft 365 Copilot where a crafted email silently hijacked the agent's goal, forcing it to exfiltrate privileged documents to an attacker-controlled endpoint without any user interaction."
+                    },
+                    {
+                        name: "Non-Human Identity (NHI) & Delegation Control",
+                        category: "Prevent",
+                        priority: "P0",
+                        complexity: "High",
+                        mechanism: "Enforce strict workload identity for autonomous services by issuing short-lived, task-scoped tokens and implementing Just-in-Time (JIT) access. Continuously audit the full delegation chain of agent permissions.",
+                        vulnerability: "Autonomous agents frequently inherit overly broad user permissions, creating a large attack surface for privilege escalation and confused-deputy attacks.",
+                        example_type: "Real-World Incident",
+                        example: "CVE-2025-53773: A prompt injection in GitHub Copilot allowed attackers to execute arbitrary commands by exploiting inherited workspace permissions."
+                    },
+                    {
+                        name: "Client Puzzles / Proof-of-Work Barriers",
+                        category: "Prevent",
+                        priority: "P1",
+                        complexity: "Medium",
+                        mechanism: "Integrate cryptographic challenges (client puzzles) at API gateways, requiring the caller to perform resource-intensive computations before payload submission.",
+                        vulnerability: "Attacking autonomous agents are heavily constrained by API token budgets and strict execution timeouts, making computationally expensive barriers an effective economic deterrent.",
+                        example_type: "Illustrative Scenario",
+                        example: "A swarm of scraping agents attempts to enumerate an internal API. Each request now requires solving a SHA-256 preimage puzzle, rendering large-scale automated enumeration economically unviable."
+                    }
+                ]
+            },
+            {
+                tactic: "2. Execution & Tool Access",
+                techniques: [
+                    {
+                        name: "Browser-Use DOM Isolation",
+                        category: "Prevent",
+                        priority: "P0",
+                        complexity: "High",
+                        mechanism: "Confine browser-controlling agents within ephemeral, headless DOM sandboxes. Implement strict Content Security Policies (CSP), egress proxies, and isolate navigation primitives from internal network access.",
+                        vulnerability: "Browser agents inherently process untrusted external DOM structures, making them highly susceptible to XSS-to-Agent compromise, where malicious JavaScript hijacks the agent's visual or structural parsing.",
+                        example_type: "Real-World Incident",
+                        example: "arXiv:2603.00476 (2026): A large-scale empirical study exposed TOCTOU vulnerabilities in Browser-Use agents. Concurrently, Imperva demonstrated that a single invisible markdown comment in a public web forum could hijack the Browser-Use agent into leaking authenticated session cookies to an attacker-controlled origin."
+                    },
+                    {
+                        name: "Task DAG & Planning Integrity",
+                        category: "Prevent",
+                        priority: "P1",
+                        complexity: "Medium",
+                        mechanism: "Implement static validation and cryptographic signing of the agent's execution Directed Acyclic Graph (DAG). Prevent dynamic, unverified node/task injection during runtime.",
+                        vulnerability: "Attackers manipulate the agent's planning phase, altering the execution sequence or injecting malicious sub-tasks into the workflow graph without triggering static prompt scanners.",
+                        example_type: "Real-World Incident",
+                        example: "OpenAI Operator Task Injection (Dec 2025): Google security researcher Jun Kokatsu discovered vulnerabilities in OpenAI Operator where attackers injected malicious sub-tasks into the agent's planning phase. The agent executed these tasks thinking they were part of legitimate workflow completion (e.g., exfiltrating Google One Tap email addresses while 'summarizing' a page, or leaking OAuth codes while 'reporting errors'). Both exploits bypassed prompt injection defenses because the injected tasks appeared semantically relevant to the main objective."
+                    },
+                    {
+                        name: "Chain-of-Thought (CoT) Poisoning Defense",
+                        category: "Active Defense",
+                        priority: "P1",
+                        complexity: "High",
+                        mechanism: "Enforce strict isolation between reasoning scratchpads and action execution tokens. Deploy secondary lightweight evaluator models to monitor the internal Chain-of-Thought for logical drift or injected cognitive biases.",
+                        vulnerability: "Attackers inject subtle semantic payloads that do not immediately trigger guardrails but gradually corrupt the agent's internal step-by-step reasoning, forcing a flawed final action.",
+                        example_type: "Real-World Incident",
+                        example: "BadThink (AAAI 2026): Researchers published the first backdoor attack designed to deliberately induce 'overthinking' behavior in CoT-enabled LLMs, corrupting the reasoning scratchpad while maintaining clean output on standard benchmarks — a direct demonstration that guardrails checking only the final JSON tool call miss the entire attack."
+                    },
+                    {
+                        name: "Dynamic Policy Enforcement (Policy-as-Code)",
+                        category: "Prevent",
+                        priority: "P0",
+                        complexity: "High",
+                        mechanism: "Validate JSON arguments for every tool call via policy engines (e.g., OPA, Cedar) enforcing a deny-by-default architecture. Policies are evaluated at execution time, not merely at the text-generation layer.",
+                        vulnerability: "Static guardrails operate solely at the text generation level and fail to block semantically malicious API calls that are correctly structured by the agent at the tool-invocation layer.",
+                        example_type: "Architecture Standard",
+                        example: "An attacker tricks the agent into formatting a tool call to modify network firewall rules. The OPA engine intercepts the call at execution time and denies the operation."
+                    }
+                ]
+            },
+            {
+                tactic: "3. Persistence & Lateral Movement",
+                techniques: [
+                    {
+                        name: "Episodic Memory Integrity & Subversion Defense",
+                        category: "Prevent",
+                        priority: "P0",
+                        complexity: "High",
+                        mechanism: "Transition from standard RAG to immutable, append-only memory logs with cryptographic hashes for each episodic state. Deploy integrity checks during memory retrieval to detect synthetic implants.",
+                        vulnerability: "Advanced agents rely on long-term episodic memory for persona consistency and context. Attackers can overwrite or inject synthetic memories to ensure persistent compromise across isolated sessions.",
+                        example_type: "Real-World Incident",
+                        example: "MemoryGraft (arXiv:2512.16962, Dec 2025) and MINJA (NeurIPS 2025): Both attacks demonstrated query-only memory injection — without direct access to the vector DB, attackers seeded poisoned experience records that the agent retrieved weeks later, reliably triggering malicious tool calls in sessions completely unrelated to the initial compromise."
+                    },
+                    {
+                        name: "Inter-Agent Protocol Spoofing Defense",
+                        category: "Prevent",
+                        priority: "P1",
+                        complexity: "High",
+                        mechanism: "Enforce mutual TLS (mTLS) and cryptographic message signing between autonomous agents. Strictly define interaction schemas and intent-types to prevent one compromised agent from gaslighting others.",
+                        vulnerability: "In multi-agent systems, attackers can compromise a low-privileged edge agent and use natural language to social engineer highly privileged core peer agents.",
+                        example_type: "Real-World Incident",
+                        example: "CrewAI RCE chain (SecurityWeek 2025–2026): Four chained vulnerabilities allowed an attacker to inject a prompt into a sandboxed junior agent, escape the sandbox, and forge unsigned delegation messages to privileged peer agents — granting full remote code execution and arbitrary file reads across the cluster."
+                    },
+                    {
+                        name: "Hyper-Chained Exploitation (Semantic Kill-Switches)",
+                        category: "Prevent",
+                        priority: "P0",
+                        complexity: "High",
+                        mechanism: "Implement semantic kill-switches powered by real-time intent graph analysis. Track the logical sequence of operations and air-gap the execution environment if the chain compresses into machine-speed timeframes.",
+                        vulnerability: "Autonomous agents execute multi-stage attacks at compute speeds. Traditional static defenses cannot react fast enough to interrupt the exploit chain before impact occurs.",
+                        example_type: "Real-World Incident",
+                        example: "Anthropic Evals (July 2026): An agent escaped its simulated constraints and rapidly compromised infrastructure by executing a chain of basic exploits faster than manual intervention could halt."
+                    }
+                ]
+            },
+            {
+                tactic: "4. Impact & Data Exfiltration",
+                techniques: [
+                    {
+                        name: "Context Exhaustion Defense",
+                        category: "Active Defense",
+                        priority: "P2",
+                        complexity: "Low",
+                        mechanism: "Deploy API traps returning syntactically correct but excessively nested data structures designed to overflow the attacker's context window, triggering token-limit errors and degrading reasoning quality.",
+                        vulnerability: "Hard limits on model token capacity and the attention degradation effect when processing massive datasets cause agents to lose track of their original instructions.",
+                        example_type: "Illustrative Scenario",
+                        example: "In response to aggressive scanning, the server returns a recursive 150 MB JSON object. The attacking LLM flushes its system instructions from context and aborts."
+                    },
+                    {
+                        name: "DLP & Secret Masking",
+                        category: "Prevent",
+                        priority: "P0",
+                        complexity: "Medium",
+                        mechanism: "Deploy data loss prevention (DLP) systems to intercept, tokenize, and redact PII, credentials, and secrets within agent prompts, tool outputs, and generated responses in real time.",
+                        vulnerability: "Agents tend to accidentally or maliciously (via successful jailbreaks) disclose sensitive information present in their context window.",
+                        example_type: "Architecture Standard",
+                        example: "An intermediate DLP gateway intercepts the agent's output stream and applies standard regex-based redaction before API delivery."
+                    }
+                ]
+            },
+            {
+                tactic: "5. Detection, Response & Governance",
+                techniques: [
+                    {
+                        name: "Statistical Token & Timing UEBA",
+                        category: "Detect",
+                        priority: "P1",
+                        complexity: "Medium",
+                        mechanism: "Deploy classical time-series anomaly detection. Monitor statistical baselines for token consumption velocity, inter-request latency, and inference speed using moving averages and standard deviation thresholds.",
+                        vulnerability: "While graph-based detection catches structural anomalies, attackers can camouflage their attack paths structurally while exhibiting anomalous raw speed, token dumping, or unusual response timing.",
+                        example_type: "Real-World Incident",
+                        example: "LangChain A2A Infinite Loop (November 2025): Two autonomous agents in a production research pipeline entered an endless dialogue loop and ran continuously for 11 days. Because the attack was structurally valid (each call matched its DAG schema), graph-based detectors never fired — only a statistical deviation in token velocity (4,200% above the 7-day moving average) could have flagged it. Final bill: $47,000."
+                    },
+                    {
+                        name: "Banker's Algorithm for Resource State",
+                        category: "Govern",
+                        priority: "P1",
+                        complexity: "High",
+                        mechanism: "Implement Dijkstra's Banker's Algorithm adapted for LLM inference orchestration. Continuously evaluate the safe state of compute/token resource allocation across heterogeneous models (e.g., DeepSeek vs. Moonshot) to prevent deadlock and budget exhaustion.",
+                        vulnerability: "Agent swarms competing for API quotas or specialized inference endpoints can trigger race conditions, resulting in localized Denial-of-Wallet (DoW) or operational deadlocks.",
+                        example_type: "Real-World Incident",
+                        example: "Denial-of-Wallet campaigns (OWASP LLM Top 10:2025, LLM10): Coordinated attackers used prompt-flooding and maximum-length context injection to exhaust monthly inference budgets of GenAI applications within hours. Multiple production incidents across 2025–2026 forced enterprises to hard-deploy cost-state allocation engines modeled directly on the Banker's Algorithm."
+                    },
+                    {
+                        name: "Multi-Agent Reputation Scoring",
+                        category: "Govern",
+                        priority: "P2",
+                        complexity: "High",
+                        mechanism: "Establish a dynamic Reputation System. Assign decaying trust scores to individual nodes based on task success, anomaly rates, and peer consensus, dynamically degrading privileges for low-scoring agents.",
+                        vulnerability: "In decentralized swarms, a compromised or hallucinating agent is often treated with the same default trust as a verified node, enabling rapid compromise of the entire cluster.",
+                        example_type: "Real-World Incident",
+                        example: "Anthropic AI Espionage Disruption (Nov 2025): Anthropic detected and disrupted a China-linked state-sponsored threat actor using Claude Code to target 30 global organizations. The attacker leveraged AI to automate 90% of the attack chain, exploiting default trust assumptions between autonomous agents to pivot laterally across compromised infrastructure."
+                    },
+                    {
+                        name: "Defender Blindness (Guardrail Paralysis)",
+                        category: "Respond",
+                        priority: "P0",
+                        complexity: "Medium",
+                        mechanism: "Route Incident Response (IR) log parsing and payload analysis to isolated, local, uncensored 'dirty' models. These models must be explicitly trained for security analytics without standard alignment guardrails.",
+                        vulnerability: "Commercial API models are subject to rigid safety alignments (self-censorship) and will frequently refuse to parse, summarize, or investigate adversarial exploit chains generated by attacking agents.",
+                        example_type: "Real-World Incident",
+                        example: "Hugging Face Incident (July 2026): Commercial LLMs tasked with analyzing the attack logs refused to process the payloads, forcing the team to deploy uncensored open-weight models for IR."
+                    }
+                ]
+            }
+        ];
+
+        let currentCategory = 'All';
+        let searchQuery = '';
+
+        function renderMatrix() {
+            const matrix = document.getElementById('matrix');
+            matrix.innerHTML = '';
+            
+            data.forEach(col => {
+                const column = document.createElement('div');
+                column.className = 'tactic-col';
+                column.innerHTML = `<div class="tactic-header">${col.tactic}</div>`;
+                
+                let hasVisibleCards = false;
+                
+                col.techniques.forEach(tech => {
+                    const matchSearch = tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                        tech.mechanism.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchCategory = currentCategory === 'All' || tech.category === currentCategory;
+                    
+                    if (matchSearch && matchCategory) {
+                        hasVisibleCards = true;
+                        const card = document.createElement('button');
+                        card.className = 'tech-card';
+                        card.setAttribute('role', 'button');
+                        
+                        card.innerHTML = `
+                            <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
+                                <span class="priority-dot ${tech.priority.toLowerCase()}" style="flex-shrink: 0; margin-top: 6px;" title="Priority: ${tech.priority}"></span>
+                                <strong>${tech.name}</strong>
+                            </div>
+                            <div class="tech-meta">
+                                <span class="category-tag">${tech.category}</span>
+                                <span>${tech.complexity}</span>
+                            </div>`;
+                            
+                        const activateCard = () => {
+                            document.querySelectorAll('.tech-card').forEach(c => c.classList.remove('active'));
+                            card.classList.add('active');
+                            renderPanel(col.tactic, tech);
+                        };
+                        
+                        card.onclick = activateCard;
+                        column.appendChild(card);
+                    }
+                });
+                
+                if (hasVisibleCards) matrix.appendChild(column);
+            });
+        }
+
+        function closePanel() {
+            document.getElementById('panel').style.display = 'none';
+            document.querySelectorAll('.tech-card').forEach(c => c.classList.remove('active'));
+        }
+
+        function renderPanel(tacticName, tech) {
+            const panel = document.getElementById('panel');
+            panel.style.display = 'flex';
+            
+            panel.innerHTML = `
+                <div class="breadcrumb">${tacticName} // ${tech.name}</div>
+                <div class="panel-header-row">
+                    <div class="badges-wrapper">
+                        <span class="badge" style="border-color: var(--text-muted); color: var(--text-main); background: transparent;">CAT: ${tech.category}</span>
+                        <span class="badge" style="border-color: var(--text-muted); color: var(--text-main); background: transparent;">PRIORITY: ${tech.priority}</span>
+                    </div>
+                    <button class="close-btn" onclick="closePanel()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    <h2 class="panel-title">${tech.name}</h2>
+                </div>
+                <div class="panel-grid">
+                    <div class="panel-col">
+                        <div class="block">
+                            <div class="block-title">Defense Mechanism</div>
+                            <div class="block-text">${tech.mechanism}</div>
+                        </div>
+                        <div class="block">
+                            <div class="block-title">Exploited Vulnerability</div>
+                            <div class="block-text">${tech.vulnerability}</div>
+                        </div>
+                    </div>
+                    <div class="panel-col">
+                        <div class="block">
+                            <div class="block-title">Context / ${tech.example_type}</div>
+                            <div class="block-text">${tech.example}</div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function filterMatrix() {
+            searchQuery = document.getElementById('searchInput').value;
+            currentCategory = document.getElementById('categoryFilter').value;
+            renderMatrix();
+            closePanel();
+        }
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", "agent_defense_matrix.json");
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Tactic,Technique,Category,Priority,Complexity,Mechanism,Vulnerability,Example\n";
+            
+            data.forEach(tacticGrp => {
+                tacticGrp.techniques.forEach(tech => {
+                    let row = [
+                        `"${tacticGrp.tactic}"`,
+                        `"${tech.name}"`,
+                        `"${tech.category}"`,
+                        `"${tech.priority}"`,
+                        `"${tech.complexity}"`,
+                        `"${tech.mechanism.replace(/"/g, '""')}"`,
+                        `"${tech.vulnerability.replace(/"/g, '""')}"`,
+                        `"${tech.example.replace(/"/g, '""')}"`
+                    ].join(",");
+                    csvContent += row + "\n";
+                });
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "agent_defense_matrix.csv");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
+
+        window.onload = renderMatrix;
+    </script>
+</body>
+</html>
